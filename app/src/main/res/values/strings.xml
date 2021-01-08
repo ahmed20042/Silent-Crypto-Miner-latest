@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">GeoShape</string>
+    <string name="server_mode">Server Mode</string>
+    <string name="client_mode">Client Mode</string>
+    <string name="msg_ip_address">Server IP Address: %s</string>
+    <string name="msg_waiting_for_players">Waiting for players…</string>
+    <string name="create_team">Create Team</string>
+    <string name="ask_server_ip">Server IP Address: </string>
+    <string name="button_connect">Connect</string>
+    <string name="error_address">Address not recognized</string>
+    <string name="btn_emulator">Connect to emulator</string>
+    <string name="button_cancel">Cancel</string>
 </resources>
