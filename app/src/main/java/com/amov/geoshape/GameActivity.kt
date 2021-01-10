@@ -1,15 +1,23 @@
 package com.amov.geoshape
 
+import android.Manifest
+import android.content.Context
 import android.content.DialogInterface
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.format.Formatter
+import android.util.Log
 import android.util.Patterns
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import com.amov.geoshape.model.Client
 import kotlinx.android.synthetic.main.activity_wait_clients.*
@@ -19,7 +27,8 @@ import kotlin.collections.ArrayList
 const val SERVER_MODE = 0
 const val CLIENT_MODE = 1
 
-class GameActivity : AppCompatActivity() {
+class GameActivity : AppCompatActivity(){
+
 
     private lateinit var model: GameViewModel
     private var dialog: AlertDialog? = null
@@ -56,12 +65,15 @@ class GameActivity : AppCompatActivity() {
         }
 
         if (model.connectionState.value != GameViewModel.ConnectionState.CONNECTION_ESTABLISHED) {
+
             when (intent.getIntExtra("mode", SERVER_MODE)) {
                 SERVER_MODE -> startAsServer()
                 CLIENT_MODE -> startAsClient()
             }
         }
+
     }
+
 
     override fun onBackPressed() {
         if (actualMode == SERVER_MODE) {
@@ -160,8 +172,10 @@ class GameActivity : AppCompatActivity() {
         dialog.show()
     }
 
+
     private fun addClientToListView(client: Client) {
-        clientsConnected.add("Player " + client.id + " connected")
+        clientsConnected.add("Player " + client.id + " connected\nLongitude" + client.long + "Latitude" + client.lat  )
         clientsConnectedAdapter.notifyDataSetChanged()
     }
+
 }
