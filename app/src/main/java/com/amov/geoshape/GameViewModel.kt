@@ -1,9 +1,14 @@
 package com.amov.geoshape
 
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import java.io.InputStream
-import java.io.OutputStream
+import com.amov.geoshape.model.Message
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.net.ServerSocket
 import java.net.Socket
 import kotlin.concurrent.thread
@@ -35,33 +40,29 @@ class GameViewModel : ViewModel() {
 
     private var threadCommunication: Thread? = null
 
-    private val inputStream: InputStream?
-        get() = socket?.getInputStream()
-    private val outputStream: OutputStream?
-        get() = socket?.getOutputStream()
-
     fun startServer() {
         if (serverSocket != null
                 || socket != null
-                || connectionState.value != ConnectionState.SETTING_PARAMETERS)
+                || connectionState.value != ConnectionState.SETTING_PARAMETERS) {
             return
+        }
 
         connectionState.postValue(ConnectionState.SERVER_CONNECTING)
 
+        serverSocket = ServerSocket(SERVER_PORT)
+
         thread {
-            while (true) {
-                serverSocket = ServerSocket(SERVER_PORT)
-                serverSocket?.apply {
-                    try {
-                        startCommunication(serverSocket!!.accept())
-                        connectionState.postValue(ConnectionState.NEW_CLIENT)
-                    } catch (_: Exception) {
-                        connectionState.postValue(ConnectionState.CONNECTION_ERROR)
-                    } finally {
-                        serverSocket?.close()
-                        serverSocket = null
-                    }
+            try {
+                while (true) {
+                    val client: Socket = serverSocket!!.accept()
+                    connectionState.postValue(ConnectionState.NEW_CLIENT)
+                    ClientHandler(client).run()
                 }
+            } catch (_: Exception) {
+                connectionState.postValue(ConnectionState.CONNECTION_ERROR)
+            } finally {
+                serverSocket?.close()
+                serverSocket = null
             }
         }
     }
@@ -73,23 +74,29 @@ class GameViewModel : ViewModel() {
     }
 
     fun startClient(serverIP: String, serverPort: Int = SERVER_PORT) {
-        if (socket != null || connectionState.value != ConnectionState.SETTING_PARAMETERS)
+        if (socket != null || connectionState.value != ConnectionState.SETTING_PARAMETERS) {
             return
+        }
+
         thread {
             connectionState.postValue(ConnectionState.CLIENT_CONNECTING)
             try {
-                val newSocket = Socket(serverIP, serverPort)
-                startCommunication(newSocket)
+                Client(serverIP, serverPort).run()
+                //startCommunication(newSocket)
             } catch (_: Exception) {
                 connectionState.postValue(ConnectionState.CONNECTION_ERROR)
             }
         }
     }
 
+    /*
     private fun startCommunication(newSocket: Socket) {
+
         if (threadCommunication != null) {
             return
         }
+
+        println("New client connected")
 
         socket = newSocket
         threadCommunication = thread {
@@ -101,17 +108,16 @@ class GameViewModel : ViewModel() {
                 connectionState.postValue(ConnectionState.CONNECTION_ESTABLISHED)
                 val bufI = inputStream!!.bufferedReader()
 
-                while (state.value != State.GAME_OVER) {
-                    val message = bufI.readLine()
-                    //val move = message.toIntOrNull() ?: MOVE_NONE
-                    //changeOtherMove(move)
-                }
+                /*while (state.value != State.GAME_OVER) {
+                    val coordinates = bufI.readLine()
+                }*/
             } catch (_: Exception) {
             } finally {
                 stopGame()
             }
         }
     }
+     */
 
     private fun stopGame() {
         try {
@@ -122,6 +128,43 @@ class GameViewModel : ViewModel() {
             threadCommunication?.interrupt()
             threadCommunication = null
         } catch (_: Exception) { }
+    }
+
+    // Class that handles a single client connection
+    class ClientHandler(client: Socket) {
+
+        private var socket: Socket = client
+
+        private val objOutput = ObjectOutputStream(socket.getOutputStream())
+        private val objInput = ObjectInputStream(socket.getInputStream())
+
+        fun run() {
+            thread {
+                val msg: Message = objInput.readObject() as Message
+                println("Message received from client: ${msg.message}")
+
+                objOutput.writeObject(Message("[ECHO SERVER] ${msg.message}"))
+            }
+        }
+    }
+
+    class Client(address: String, port: Int) {
+
+        private val connection = Socket(address, port)
+
+        private val objOutput = ObjectOutputStream(connection.getOutputStream())
+        private val objInput = ObjectInputStream(connection.getInputStream())
+
+        fun run() {
+            thread {
+                objOutput.writeObject(Message("[MESSAGE]"))
+
+                val response: Message = objInput.readObject() as Message
+                println("RESPONSE: ${response.message}")
+            }
+        }
+
+
     }
 
 }

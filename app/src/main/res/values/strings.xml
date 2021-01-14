@@ -10,4 +10,6 @@
     <string name="error_address">Address not recognized</string>
     <string name="btn_emulator">Connect to emulator</string>
     <string name="button_cancel">Cancel</string>
+    <string name="loading_start_game">Waiting for host to \nstart the game</string>
+    <string name="title_activity_loading_client_map">Map</string>
 </resources>

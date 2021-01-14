@@ -3,12 +3,12 @@ package com.amov.geoshape
 import android.Manifest
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.os.Looper
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.format.Formatter
@@ -20,6 +20,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import com.amov.geoshape.model.Client
+import com.google.android.gms.location.*
+import kotlinx.android.synthetic.main.activity_game.*
 import kotlinx.android.synthetic.main.activity_wait_clients.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -27,21 +29,21 @@ import kotlin.collections.ArrayList
 const val SERVER_MODE = 0
 const val CLIENT_MODE = 1
 
-class GameActivity : AppCompatActivity(){
-
+class GameActivity : AppCompatActivity() {
 
     private lateinit var model: GameViewModel
     private var dialog: AlertDialog? = null
     private var actualMode: Int? = null
 
-    private var clientsConnected: ArrayList<String> = arrayListOf()
+    private var clientsConnected: ArrayList<Client> = arrayListOf()
+    private var clientsConnectedNames: ArrayList<String> = arrayListOf()
     private lateinit var clientsConnectedAdapter: ArrayAdapter<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
 
-        clientsConnectedAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, clientsConnected)
+        clientsConnectedAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, clientsConnectedNames)
 
         model = ViewModelProvider(this).get(GameViewModel::class.java)
         model.state.observe(this) {
@@ -56,8 +58,9 @@ class GameActivity : AppCompatActivity(){
             }
 
             if (it == GameViewModel.ConnectionState.CONNECTION_ERROR ||
-                    it == GameViewModel.ConnectionState.CONNECTION_ENDED)
+                    it == GameViewModel.ConnectionState.CONNECTION_ENDED) {
                 finish()
+            }
 
             if (it == GameViewModel.ConnectionState.NEW_CLIENT) {
                 addClientToListView(Client())
@@ -65,15 +68,12 @@ class GameActivity : AppCompatActivity(){
         }
 
         if (model.connectionState.value != GameViewModel.ConnectionState.CONNECTION_ESTABLISHED) {
-
             when (intent.getIntExtra("mode", SERVER_MODE)) {
                 SERVER_MODE -> startAsServer()
                 CLIENT_MODE -> startAsClient()
             }
         }
-
     }
-
 
     override fun onBackPressed() {
         if (actualMode == SERVER_MODE) {
@@ -93,6 +93,7 @@ class GameActivity : AppCompatActivity(){
 
     private fun startAsServer() {
         actualMode = SERVER_MODE
+
         val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         val ipAddress = Formatter.formatIpAddress(wifiManager.connectionInfo.ipAddress)
 
@@ -105,8 +106,7 @@ class GameActivity : AppCompatActivity(){
 
         // Server mode is also a player (player 1),
         // so add it to clients list
-        val server = Client()
-        addClientToListView(server)
+        addClientToListView(Client())
 
         createTeamBtn.setOnClickListener {
             if (clientsConnected.size < 3) {
@@ -119,6 +119,7 @@ class GameActivity : AppCompatActivity(){
 
     private fun startAsClient() {
         actualMode = CLIENT_MODE
+
         val ipEditText = EditText(this).apply {
             maxLines = 1
             width = 10
@@ -155,7 +156,7 @@ class GameActivity : AppCompatActivity(){
                 }
             }
             setNeutralButton(getString(R.string.btn_emulator)) { _: DialogInterface, _: Int ->
-                // model.startClient("10.0.2.2", SERVER_PORT-1)
+                model.startClient("10.0.2.2", SERVER_PORT-1)
                 // Add port redirect on the Server Emulator:
                 // telnet localhost <5554|5556|5558|...>
                 // auth <key>
@@ -172,10 +173,9 @@ class GameActivity : AppCompatActivity(){
         dialog.show()
     }
 
-
     private fun addClientToListView(client: Client) {
-        clientsConnected.add("Player " + client.id + " connected\nLongitude" + client.long + "Latitude" + client.lat  )
+        clientsConnected.add(client)
+        clientsConnectedNames.add("Client " + client.id + " connected (" + client.lat + ", " + client.long + ")")
         clientsConnectedAdapter.notifyDataSetChanged()
     }
-
 }

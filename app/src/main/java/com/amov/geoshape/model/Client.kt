@@ -4,6 +4,7 @@ var count = 1
 
 class Client {
     var id = count++
-    lateinit var lat: String
-    lateinit var long: String
+    var lat: String = ""
+    var long: String = ""
 }
+
