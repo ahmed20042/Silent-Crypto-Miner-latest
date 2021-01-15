@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1066003757460",
+    "project_id": "geoshape-1dd43",
+    "storage_bucket": "geoshape-1dd43.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066003757460:android:daea11bdc65262a691b781",
+        "android_client_info": {
+          "package_name": "com.amov.geoshape"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1066003757460-19dgqdq3esvepead5dv4a3bid2oed563.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtY7Lqf0-R2HuM8NVGDdWadv8_Lg2gLTQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1066003757460-19dgqdq3esvepead5dv4a3bid2oed563.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

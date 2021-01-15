@@ -1,14 +1,10 @@
 package com.amov.geoshape
 
-import android.Manifest
-import android.content.Context
 import android.content.DialogInterface
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.LocationManager
+import android.location.Location
 import android.net.wifi.WifiManager
 import android.os.Bundle
-import android.os.Looper
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.format.Formatter
@@ -24,7 +20,9 @@ import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_game.*
 import kotlinx.android.synthetic.main.activity_wait_clients.*
 import java.util.*
+import java.util.jar.Manifest
 import kotlin.collections.ArrayList
+import kotlin.concurrent.thread
 
 const val SERVER_MODE = 0
 const val CLIENT_MODE = 1
@@ -39,9 +37,15 @@ class GameActivity : AppCompatActivity() {
     private var clientsConnectedNames: ArrayList<String> = arrayListOf()
     private lateinit var clientsConnectedAdapter: ArrayAdapter<String>
 
+    lateinit var fusedLocationClient : FusedLocationProviderClient
+    var myLocation: Location? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        getLastLocation()
 
         clientsConnectedAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, clientsConnectedNames)
 
@@ -73,6 +77,30 @@ class GameActivity : AppCompatActivity() {
                 CLIENT_MODE -> startAsClient()
             }
         }
+    }
+
+    private fun getLastLocation() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermission()
+        } else {
+            fusedLocationClient.lastLocation
+                    .addOnSuccessListener { location: Location? ->
+                        myLocation = location
+
+                        if (location != null) {
+                            latitudeTv.text = location.latitude.toString()
+                            longitudeTv.text = location.longitude.toString()
+                        }
+                    }
+        }
+    }
+
+    private fun requestPermission() {
+        ActivityCompat.requestPermissions(this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                1000
+        )
+        this.recreate()
     }
 
     override fun onBackPressed() {
@@ -152,11 +180,11 @@ class GameActivity : AppCompatActivity() {
                     ).show()
                     finish()
                 } else {
-                    model.startClient(ipEditText.text.toString())
+                    model.startClient(ipEditText.text.toString(), myLocation)
                 }
             }
             setNeutralButton(getString(R.string.btn_emulator)) { _: DialogInterface, _: Int ->
-                model.startClient("10.0.2.2", SERVER_PORT-1)
+                model.startClient("10.0.2.2", myLocation, SERVER_PORT-1)
                 // Add port redirect on the Server Emulator:
                 // telnet localhost <5554|5556|5558|...>
                 // auth <key>
@@ -175,7 +203,7 @@ class GameActivity : AppCompatActivity() {
 
     private fun addClientToListView(client: Client) {
         clientsConnected.add(client)
-        clientsConnectedNames.add("Client " + client.id + " connected (" + client.lat + ", " + client.long + ")")
+        clientsConnectedNames.add("Player " + client.id + " connected")
         clientsConnectedAdapter.notifyDataSetChanged()
     }
 }

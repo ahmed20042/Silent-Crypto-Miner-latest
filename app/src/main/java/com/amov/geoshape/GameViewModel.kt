@@ -1,12 +1,11 @@
 package com.amov.geoshape
 
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
+import android.location.Location
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.amov.geoshape.model.Client
 import com.amov.geoshape.model.Message
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.ServerSocket
@@ -18,18 +17,11 @@ const val SERVER_PORT = 9999
 class GameViewModel : ViewModel() {
 
     enum class State {
-        STARTING,
-        GAME_OVER
+        STARTING, GAME_OVER
     }
 
     enum class ConnectionState {
-        SETTING_PARAMETERS,
-        SERVER_CONNECTING,
-        NEW_CLIENT,
-        CLIENT_CONNECTING,
-        CONNECTION_ESTABLISHED,
-        CONNECTION_ERROR,
-        CONNECTION_ENDED
+        SETTING_PARAMETERS, SERVER_CONNECTING, NEW_CLIENT, CLIENT_CONNECTING, CONNECTION_ESTABLISHED, CONNECTION_ERROR, CONNECTION_ENDED
     }
 
     val state = MutableLiveData(State.STARTING)
@@ -73,7 +65,7 @@ class GameViewModel : ViewModel() {
         serverSocket = null
     }
 
-    fun startClient(serverIP: String, serverPort: Int = SERVER_PORT) {
+    fun startClient(serverIP: String, location: Location?, serverPort: Int = SERVER_PORT) {
         if (socket != null || connectionState.value != ConnectionState.SETTING_PARAMETERS) {
             return
         }
@@ -81,43 +73,13 @@ class GameViewModel : ViewModel() {
         thread {
             connectionState.postValue(ConnectionState.CLIENT_CONNECTING)
             try {
-                Client(serverIP, serverPort).run()
+                ClientConnection(serverIP, serverPort, location).run()
                 //startCommunication(newSocket)
             } catch (_: Exception) {
                 connectionState.postValue(ConnectionState.CONNECTION_ERROR)
             }
         }
     }
-
-    /*
-    private fun startCommunication(newSocket: Socket) {
-
-        if (threadCommunication != null) {
-            return
-        }
-
-        println("New client connected")
-
-        socket = newSocket
-        threadCommunication = thread {
-            try {
-                if (inputStream == null) {
-                    return@thread
-                }
-
-                connectionState.postValue(ConnectionState.CONNECTION_ESTABLISHED)
-                val bufI = inputStream!!.bufferedReader()
-
-                /*while (state.value != State.GAME_OVER) {
-                    val coordinates = bufI.readLine()
-                }*/
-            } catch (_: Exception) {
-            } finally {
-                stopGame()
-            }
-        }
-    }
-     */
 
     private fun stopGame() {
         try {
@@ -140,31 +102,49 @@ class GameViewModel : ViewModel() {
 
         fun run() {
             thread {
-                val msg: Message = objInput.readObject() as Message
-                println("Message received from client: ${msg.message}")
+                while (true) {
+                    // Receives the message from the client
+                    val client: Client = objInput.readObject() as Client
+                    Log.d("[SERVER]", "${client.lat} + ${client.long}")
 
-                objOutput.writeObject(Message("[ECHO SERVER] ${msg.message}"))
+                    // Sends the response to client
+                    objOutput.writeObject(client)
+                }
             }
+        }
+
+        fun distanceTwoPlayers(player1: Client, player2: Client) {
+
         }
     }
 
-    class Client(address: String, port: Int) {
+    class ClientConnection(address: String, port: Int, location: Location?) {
 
         private val connection = Socket(address, port)
 
         private val objOutput = ObjectOutputStream(connection.getOutputStream())
         private val objInput = ObjectInputStream(connection.getInputStream())
 
+        private val lat = location?.latitude
+        private val long = location?.longitude
+
         fun run() {
             thread {
-                objOutput.writeObject(Message("[MESSAGE]"))
+                while (true) {
+                    // Sends the message to server
+                    val client = Client()
+                    client.lat = lat.toString()
+                    client.long = long.toString()
+                    objOutput.writeObject(client)
 
-                val response: Message = objInput.readObject() as Message
-                println("RESPONSE: ${response.message}")
+                    // Receives the response from the server and prints it
+                    val response: Message = objInput.readObject() as Message
+                    Log.d("[CLIENT]", response.message)
+
+                    Thread.sleep(2500)
+                }
             }
         }
-
-
     }
 
 }
