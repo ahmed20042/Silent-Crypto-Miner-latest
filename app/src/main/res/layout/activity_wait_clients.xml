@@ -41,12 +41,27 @@
 
         </LinearLayout>
 
-        <Button
-            android:id="@+id/createTeamBtn"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/create_team"
-            android:padding="16dp" />
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/sendSMSBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/send_sms"
+                android:onClick="sendMessage"
+                android:padding="16dp" />
+
+            <Button
+                android:id="@+id/createTeamBtn"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/create_team"
+                android:padding="16dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

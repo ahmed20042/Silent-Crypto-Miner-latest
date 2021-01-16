@@ -12,4 +12,5 @@
     <string name="button_cancel">Cancel</string>
     <string name="loading_start_game">Waiting for host to \nstart the game</string>
     <string name="title_activity_loading_client_map">Map</string>
+    <string name="send_sms">Send SMS</string>
 </resources>

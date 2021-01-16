@@ -1,23 +1,31 @@
 package com.amov.geoshape
 
 import android.Manifest
-import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.provider.Telephony
+import android.provider.Telephony.Sms.Intents.getMessagesFromIntent
+import android.telephony.SmsManager
+import android.telephony.SmsMessage
 import android.text.InputFilter
 import android.text.Spanned
+import android.text.TextUtils
 import android.text.format.Formatter
 import android.util.Log
 import android.util.Patterns
+import android.view.View
 import android.widget.*
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import com.amov.geoshape.model.Client
 import com.google.android.gms.location.*
@@ -25,15 +33,20 @@ import kotlinx.android.synthetic.main.activity_wait_clients.*
 import kotlinx.android.synthetic.main.activity_wait_start_game.*
 import java.util.*
 
+
 const val SERVER_MODE = 0
 const val CLIENT_MODE = 1
 const val TAG = "MyMessage"
+const val LOCATION_CODE = 1111
+const val SMS_CODE = 2222
 
 class GameActivity : AppCompatActivity(), LocationListener {
 
     private lateinit var model: GameViewModel
     private var dialog: AlertDialog? = null
     private var actualMode: Int? = null
+
+    private lateinit var ipAddress: String
 
     private var clientsConnected: ArrayList<Client> = arrayListOf()
     private var clientsConnectedNames: ArrayList<String> = arrayListOf()
@@ -117,7 +130,7 @@ class GameActivity : AppCompatActivity(), LocationListener {
         actualMode = SERVER_MODE
 
         val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-        val ipAddress = Formatter.formatIpAddress(wifiManager.connectionInfo.ipAddress)
+        ipAddress = Formatter.formatIpAddress(wifiManager.connectionInfo.ipAddress)
 
         setContentView(R.layout.activity_wait_clients)
         clientsListView.adapter = clientsConnectedAdapter
@@ -224,18 +237,68 @@ class GameActivity : AppCompatActivity(), LocationListener {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 25)
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ), LOCATION_CODE
+                )
         }
 
         fLoc.requestLocationUpdates(locReq, locationCallback, null)
         locEnable = true
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    fun sendMessage(view: View) {
+        val permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            val numberInput = EditText(this)
+            val dialog = AlertDialog.Builder(this).run {
+                setTitle("Send IP address by SMS")
+                    .setPositiveButton("Send") { _, _ ->
+                        myMessage(ipAddress, numberInput.text.toString())
+                    }
+                    .setNegativeButton("Cancel") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                setView(numberInput)
+                create()
+            }
+            dialog.show()
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.SEND_SMS), SMS_CODE)
+        }
+    }
+
+    private fun myMessage(message: String, number: String) {
+        if (number == "" || message == "") {
+            Toast.makeText(this, "Field cannot be empty", Toast.LENGTH_SHORT).show()
+        } else {
+            if (TextUtils.isDigitsOnly(number)) {
+                val smsManager: SmsManager = SmsManager.getDefault()
+                smsManager.sendTextMessage(number, null, message, null, null)
+                Toast.makeText(this, "Message Sent", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Please enter the correct number", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == 25)
+
+        if(requestCode == LOCATION_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             startLocation()
+        }
+
+        if(requestCode == SMS_CODE && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            return
+        }
     }
 
     private var locationCallback = object : LocationCallback() {
