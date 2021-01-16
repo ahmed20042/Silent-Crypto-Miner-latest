@@ -15,25 +15,4 @@
         android:textAlignment="center"
         android:text="Waiting player 1 to \nstart the game..."/>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:paddingTop="100dp"
-        android:text="Your current location: "/>
-
-    <TextView
-        android:id="@+id/latitudeTv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:text="Latitude"/>
-
-    <TextView
-        android:id="@+id/longitudeTv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:text="Longitude"/>
-
 </LinearLayout>
