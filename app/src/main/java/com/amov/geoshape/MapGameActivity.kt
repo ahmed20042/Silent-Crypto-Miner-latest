@@ -26,18 +26,22 @@ class MapGameActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map_game)
 
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        googleMap.addMarker(
-            MarkerOptions()
+        googleMap
+            .addMarker(MarkerOptions()
                 .position(ISEC)
-                .position(DEIS)
-                .title("Marker")
+                .title("ISEC")
         )
+
+        googleMap
+            .addMarker(MarkerOptions()
+                .position(DEIS)
+                .title("DEIS")
+            )
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -53,5 +57,7 @@ class MapGameActivity : AppCompatActivity(), OnMapReadyCallback {
         val cp = CameraPosition.Builder().target(ISEC).zoom(17f)
             .bearing(0f).tilt(0f).build()
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cp))
+
+        googleMap.addMarker(MarkerOptions().position(DEIS).title("DEIS-ISEC"))
     }
 }

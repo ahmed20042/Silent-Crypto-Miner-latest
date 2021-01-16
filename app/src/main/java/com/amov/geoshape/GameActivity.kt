@@ -1,17 +1,23 @@
 package com.amov.geoshape
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.format.Formatter
+import android.util.Log
 import android.util.Patterns
 import android.widget.*
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import com.amov.geoshape.model.Client
 import com.google.android.gms.location.*
@@ -19,11 +25,11 @@ import kotlinx.android.synthetic.main.activity_wait_clients.*
 import kotlinx.android.synthetic.main.activity_wait_start_game.*
 import java.util.*
 
-
 const val SERVER_MODE = 0
 const val CLIENT_MODE = 1
+const val TAG = "MyMessage"
 
-class GameActivity : AppCompatActivity() {
+class GameActivity : AppCompatActivity(), LocationListener {
 
     private lateinit var model: GameViewModel
     private var dialog: AlertDialog? = null
@@ -33,9 +39,16 @@ class GameActivity : AppCompatActivity() {
     private var clientsConnectedNames: ArrayList<String> = arrayListOf()
     private lateinit var clientsConnectedAdapter: ArrayAdapter<String>
 
+    lateinit var fLoc: FusedLocationProviderClient
+    var locEnable = false
+    var latitude: Double = 0.0
+    var longitude: Double = 0.0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wait_start_game)
+
+        fLoc = FusedLocationProviderClient(this)
 
         clientsConnectedAdapter = ArrayAdapter(
             this,
@@ -78,6 +91,11 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        startLocation()
+    }
+
     override fun onBackPressed() {
         if (actualMode == SERVER_MODE) {
             val dialog = AlertDialog.Builder(this).run {
@@ -109,7 +127,10 @@ class GameActivity : AppCompatActivity() {
 
         // Server mode is also a player (player 1),
         // so add it to clients list
-        addClientToListView(Client())
+        val client = Client()
+        client.lat = latitude.toString()
+        client.long = longitude.toString()
+        addClientToListView(client)
 
         createTeamBtn.setOnClickListener {
             if (clientsConnected.size < 3) {
@@ -190,6 +211,48 @@ class GameActivity : AppCompatActivity() {
             create()
         }
         dialog.show()
+    }
+
+    private fun startLocation() {
+        val locReq = LocationRequest().apply {
+            interval = 4000
+            fastestInterval = 2000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            maxWaitTime = 1000
+        }
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), 25)
+        }
+
+        fLoc.requestLocationUpdates(locReq, locationCallback, null)
+        locEnable = true
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if(requestCode == 25)
+            startLocation()
+    }
+
+    private var locationCallback = object : LocationCallback() {
+        override fun onLocationResult(p0: LocationResult?) {
+            Log.i(TAG, "onLocationResult: ")
+            p0?.locations?.forEach {
+                Log.i(TAG, "locationCallback: ${it.latitude} ${it.longitude}")
+                latitude = it.latitude
+                longitude = it.longitude
+            }
+        }
+    }
+
+    override fun onLocationChanged(location: Location) {
+        longitude = location.longitude
+        latitude = location.latitude
+        Log.i(TAG, "Location: $longitude $latitude")
     }
 
     private fun addClientToListView(client: Client) {

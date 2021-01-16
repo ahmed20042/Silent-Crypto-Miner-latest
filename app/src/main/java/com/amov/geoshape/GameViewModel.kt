@@ -1,16 +1,27 @@
 package com.amov.geoshape
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.amov.geoshape.model.Client
 import com.amov.geoshape.model.Message
 import com.amov.geoshape.model.Team
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.io.ObjectInputStream
@@ -178,6 +189,14 @@ class GameViewModel : ViewModel() {
                     // Receives the response from the server and prints it
                     val response: Client = objInput.readObject() as Client
                     println("[CLIENT] RESPONSE FROM SERVER: $response")
+
+                    val db = Firebase.firestore
+
+                    val v = db.collection("Teams").document("Level1")
+                    v.get(Source.SERVER)
+                        .addOnSuccessListener {
+                            v.update("nrgames", it.getLong("nrgames")!!+1)
+                        }
 
                     Thread.sleep(2500)
                 }
