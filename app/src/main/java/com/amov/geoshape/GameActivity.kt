@@ -41,6 +41,7 @@ class GameActivity : AppCompatActivity(), LocationListener {
 
     lateinit var fLoc: FusedLocationProviderClient
     var locEnable = false
+
     var latitude: Double = 0.0
     var longitude: Double = 0.0
 
@@ -49,6 +50,8 @@ class GameActivity : AppCompatActivity(), LocationListener {
         setContentView(R.layout.activity_wait_start_game)
 
         fLoc = FusedLocationProviderClient(this)
+
+        startLocation()
 
         clientsConnectedAdapter = ArrayAdapter(
             this,
@@ -79,7 +82,10 @@ class GameActivity : AppCompatActivity(), LocationListener {
             }
 
             if (it == GameViewModel.ConnectionState.NEW_CLIENT) {
-                addClientToListView(Client())
+                val client = Client()
+                client.lat = latitude.toString()
+                client.long = longitude.toString()
+                addClientToListView(client)
             }
         }
 
@@ -89,11 +95,6 @@ class GameActivity : AppCompatActivity(), LocationListener {
                 CLIENT_MODE -> startAsClient()
             }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        startLocation()
     }
 
     override fun onBackPressed() {
@@ -233,7 +234,6 @@ class GameActivity : AppCompatActivity(), LocationListener {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
         if(requestCode == 25)
             startLocation()
     }
@@ -242,9 +242,9 @@ class GameActivity : AppCompatActivity(), LocationListener {
         override fun onLocationResult(p0: LocationResult?) {
             Log.i(TAG, "onLocationResult: ")
             p0?.locations?.forEach {
-                Log.i(TAG, "locationCallback: ${it.latitude} ${it.longitude}")
                 latitude = it.latitude
                 longitude = it.longitude
+                Log.i(TAG, "locationCallback: $latitude $longitude")
             }
         }
     }
@@ -252,12 +252,12 @@ class GameActivity : AppCompatActivity(), LocationListener {
     override fun onLocationChanged(location: Location) {
         longitude = location.longitude
         latitude = location.latitude
-        Log.i(TAG, "Location: $longitude $latitude")
+        Log.i(TAG, "onLocationChanged: $longitude $latitude")
     }
 
     private fun addClientToListView(client: Client) {
         clientsConnected.add(client)
-        clientsConnectedNames.add("Player " + client.id + " connected")
+        clientsConnectedNames.add("Player ${client.id} - (${client.lat}, ${client.long}) connected")
         clientsConnectedAdapter.notifyDataSetChanged()
     }
 }

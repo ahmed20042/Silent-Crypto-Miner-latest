@@ -35,6 +35,7 @@ import kotlin.collections.ArrayList
 import kotlin.concurrent.thread
 
 const val SERVER_PORT = 9999
+var CLIENT_ID = 1
 
 class GameViewModel : ViewModel() {
 
@@ -51,6 +52,7 @@ class GameViewModel : ViewModel() {
 
     private var socket: Socket? = null
     private var serverSocket: ServerSocket? = null
+    var uniqueTeamId: String = ""
 
     fun startGame(players: ArrayList<Client>, teamName: String) {
         state.postValue(State.TEAM_CREATED)
@@ -69,10 +71,10 @@ class GameViewModel : ViewModel() {
         val simpleDateFormat = SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z")
         val currentDateAndTime: String = simpleDateFormat.format(Date())
 
-        val hostLocation = "28°05'56\"S, 48°40'30\"O"
-        val uniqueId = "[$hostLocation]; [${players.size}]; [${currentDateAndTime}];"
+        val hostLocation = "${players[0].lat}, ${players[0].long}"
+        uniqueTeamId = "[$hostLocation]; [${players.size}]; [${currentDateAndTime}];"
 
-        val newTeam = Team(uniqueId, players.size, polygon, currentDateAndTime, hostLocation)
+        val newTeam = Team(uniqueTeamId, players.size, polygon, currentDateAndTime, hostLocation)
         newTeam.name = teamName
 
         createTeamOnFirebase(newTeam, players)
@@ -107,7 +109,8 @@ class GameViewModel : ViewModel() {
                 while (true) {
                     val client: Socket = serverSocket!!.accept()
                     connectionState.postValue(ConnectionState.NEW_CLIENT)
-                    ClientHandler(client).run()
+                    CLIENT_ID++
+                    ClientHandler(client, CLIENT_ID).run()
                 }
             } catch (_: Exception) {
                 connectionState.postValue(ConnectionState.CONNECTION_ERROR)
@@ -149,53 +152,59 @@ class GameViewModel : ViewModel() {
     }
 
     // Class that handles a single client connection
-    class ClientHandler(client: Socket) {
+    inner class ClientHandler(client: Socket, clientId: Int) {
 
         private var socket: Socket = client
 
         private val objOutput = ObjectOutputStream(socket.getOutputStream())
         private val objInput = ObjectInputStream(socket.getInputStream())
 
+        private var client: Int = clientId
+
         fun run() {
             thread {
+                val messageId = Message(client.toString())
+                objOutput.writeObject(messageId)
+                println("[SERVER] ENVIEI ID DO CLIENTE ${messageId.message}")
+
                 while (true) {
                     // Receives the message from the client
-                    val client: Client = objInput.readObject() as Client
-                    println("[SERVER] RECEIVED PING FROM CLIENT")
-
-                    // Sends the response to client
-                    objOutput.writeObject(client)
-                    println("[CLIENT] SENDING BACK PING TO CLIENT")
+                    if (uniqueTeamId != "") {
+                        val message = Message(uniqueTeamId)
+                        println("[SERVER] ENVIEI ID DA EQUIPA ${message.message}")
+                        objOutput.writeObject(message)
+                    }
                 }
             }
         }
     }
 
-    class ClientConnection(address: String, port: Int) {
+    inner class ClientConnection(address: String, port: Int) {
 
         private val connection = Socket(address, port)
 
         private val objOutput = ObjectOutputStream(connection.getOutputStream())
         private val objInput = ObjectInputStream(connection.getInputStream())
 
+        private var myId: Int = 0
+
         fun run() {
             thread {
-                while (true) {
-                    // Sends the message to server
-                    val client = Client()
-                    objOutput.writeObject(client)
-                    println("[CLIENT] SENDING PING TO SERVER")
+                val message = objInput.readObject() as Message
+                myId = message.message.toInt()
+                println("[CLIENT] I RECEIVED MY ID: ${message.message}")
 
+                while (true) {
                     // Receives the response from the server and prints it
-                    val response: Client = objInput.readObject() as Client
-                    println("[CLIENT] RESPONSE FROM SERVER: $response")
+                    val message: Message = objInput.readObject() as Message
+                    println("[CLIENT] I RECEIVED THE TEAM ID: ${message.message}")
 
                     val db = Firebase.firestore
 
-                    val v = db.collection("Teams").document("Level1")
+                    val v = db.collection("Teams").document(message.message)
                     v.get(Source.SERVER)
                         .addOnSuccessListener {
-                            v.update("nrgames", it.getLong("nrgames")!!+1)
+                            //v.update(myId, "123, 123")
                         }
 
                     Thread.sleep(2500)
