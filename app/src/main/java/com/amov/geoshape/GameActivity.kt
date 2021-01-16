@@ -147,7 +147,7 @@ class GameActivity : AppCompatActivity(), LocationListener {
         addClientToListView(client)
 
         createTeamBtn.setOnClickListener {
-            if (clientsConnected.size < 3) {
+            if (clientsConnected.size < 1) {
                 Toast.makeText(this, "You need at least 3 players", Toast.LENGTH_LONG).show()
             } else {
                 val input = EditText(this)
@@ -242,7 +242,8 @@ class GameActivity : AppCompatActivity(), LocationListener {
                     arrayOf(
                         Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_COARSE_LOCATION
-                    ), LOCATION_CODE
+                    ),
+                    LOCATION_CODE
                 )
         }
 
