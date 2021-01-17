@@ -31,21 +31,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
-                android:text="Distancia ISEC-DEIS: "/>
+                android:text="@string/distancia_isec_deis"/>
 
             <TextView
                 android:id="@+id/deisTeatroDistance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
-                android:text="Distancia DEIS-Teatro: "/>
+                android:text="@string/distancia_deis_teatro"/>
 
             <TextView
                 android:id="@+id/teatroDeisDistance"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
-                android:text="Distancia Teatro-DEIS: "/>
+                android:text="@string/distancia_teatro_deis"/>
 
         </LinearLayout>
 

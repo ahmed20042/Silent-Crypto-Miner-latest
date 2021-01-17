@@ -1,18 +1,13 @@
 package com.amov.geoshape
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.wifi.WifiManager
 import android.os.Bundle
-import android.provider.Telephony
-import android.provider.Telephony.Sms.Intents.getMessagesFromIntent
 import android.telephony.SmsManager
-import android.telephony.SmsMessage
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.TextUtils
@@ -147,7 +142,7 @@ class GameActivity : AppCompatActivity(), LocationListener {
         addClientToListView(client)
 
         createTeamBtn.setOnClickListener {
-            if (clientsConnected.size < 1) {
+            if (clientsConnected.size < 3) {
                 Toast.makeText(this, "You need at least 3 players", Toast.LENGTH_LONG).show()
             } else {
                 val input = EditText(this)
@@ -323,5 +318,9 @@ class GameActivity : AppCompatActivity(), LocationListener {
         clientsConnected.add(client)
         clientsConnectedNames.add("Player ${client.id} - (${client.lat}, ${client.long}) connected")
         clientsConnectedAdapter.notifyDataSetChanged()
+    }
+
+    fun showMap(view: View) {
+        startActivity(Intent(this, MapGameActivity::class.java))
     }
 }

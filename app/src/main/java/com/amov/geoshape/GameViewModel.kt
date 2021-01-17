@@ -24,6 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.android.synthetic.main.activity_wait_start_game.*
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.ServerSocket

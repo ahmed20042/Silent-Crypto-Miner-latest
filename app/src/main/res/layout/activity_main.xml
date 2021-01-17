@@ -36,6 +36,15 @@
             android:text="@string/client_mode"
             android:padding="16dp"/>
 
+        <Button
+            android:id="@+id/topPoligonos"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="50dp"
+            android:text="@string/top_polygons"
+            android:onClick="topPolygons"
+            android:padding="16dp"/>
+
     </LinearLayout>
 
 </LinearLayout>

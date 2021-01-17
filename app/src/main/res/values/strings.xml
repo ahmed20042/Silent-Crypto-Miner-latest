@@ -13,4 +13,10 @@
     <string name="loading_start_game">Waiting for host to \nstart the game</string>
     <string name="title_activity_loading_client_map">Map</string>
     <string name="send_sms">Send SMS</string>
+    <string name="distancia_isec_deis">Distance ISEC-DEIS:</string>
+    <string name="distancia_deis_teatro">Distance DEIS-Teatro:</string>
+    <string name="distancia_teatro_deis">Distance Teatro-DEIS:</string>
+    <string name="waiting_player_1_to_nstart_the_game">Waiting player 1 to \nstart the game...</string>
+    <string name="show_map">Show Map</string>
+    <string name="top_polygons">Top Polygons</string>
 </resources>

@@ -8,11 +8,27 @@
     android:orientation="vertical"
     tools:context=".GameActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="24sp"
-        android:textAlignment="center"
-        android:text="Waiting player 1 to \nstart the game..."/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:textAlignment="center"
+            android:text="@string/waiting_player_1_to_nstart_the_game"/>
+
+        <Button
+            android:id="@+id/showMapBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:onClick="showMap"
+            android:text="@string/show_map" />
+
+    </LinearLayout>
 
 </LinearLayout>
